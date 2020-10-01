@@ -1,0 +1,98 @@
+const chatForm = document.getElementById('chat-form');
+const chatMessages = document.querySelector('.chat-messages');
+const roomName = document.getElementById('room-name');
+const userList = document.getElementById('users');
+var audio = new Audio('msg.mp3')
+
+// Get username and room from URL
+const { username, room } = Qs.parse(location.search, {
+  ignoreQueryPrefix: true
+  // ignoreQueryPrefix: false
+});
+
+//  const socket = io();
+var socket = io.connect('http://localhost:3000');
+// Join chatroom
+socket.emit('joinRoom', { username, room });
+
+// Get room and users
+socket.on('roomUsers', ({ room, users }) => {
+  outputRoomName(room);
+  outputUsers(users);
+});
+
+// Message from server
+socket.on('message', message => {
+  // console.log(message);
+  // outputMessage(message);
+if(username==message.username)
+{
+  console.log(message);
+  outputMessage(message);
+}
+else
+{
+  console.log(message);
+  outputMessage2(message);
+}
+
+  // Scroll down
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+});
+
+socket.on('message2', message2 => {
+  console.log(message2);
+  outputMessage2(message2);
+
+  // Scroll down
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+});
+
+// Message submit
+chatForm.addEventListener('submit', e => {
+  e.preventDefault();
+
+  // Get message text
+  const msg = e.target.elements.msg.value;
+
+  // Emit message to server
+  socket.emit('chatMessage', msg);
+
+  // Clear input
+  e.target.elements.msg.value = '';
+  e.target.elements.msg.focus();
+});
+
+// Output message to DOM
+function outputMessage(message) {
+  const div = document.createElement('div');
+  div.classList.add('message');
+  div.innerHTML = `<p class="meta" style="font-size:12px !important;">You <span style="font-size:12px !important;float:right"><i class="far fa-clock"></i>&nbsp;${message.time}&emsp;<i class="fas fa-check-circle" style="color:yellow;font-size:12px"></i></span></p><br>
+  <p class="text" style="font-size:18px;font-weight:500">
+    ${message.text}
+  </p>`;
+  document.querySelector('.chat-messages').appendChild(div);
+}
+
+function outputMessage2(message2) {
+  const div = document.createElement('div');
+  div.classList.add('message2');
+  div.innerHTML = `<p class="meta" style="font-size:12px !important;">${message2.username} <span style="font-size:12px !important;float:right"><i class="far fa-clock"></i>&nbsp;${message2.time}</span></p><br>
+  <p class="text" style="font-size:18px;font-weight:500">
+    ${message2.text}
+  </p>`;
+  document.querySelector('.chat-messages').appendChild(div);
+  audio.play();
+}
+
+// Add room name to DOM
+function outputRoomName(room) {
+  roomName.innerText = room;
+}
+
+// Add users to DOM
+function outputUsers(users) {
+  userList.innerHTML = `
+    ${users.map(user => `<li style="font-size:18px !important"><i class="far fa-smile"></i>&nbsp;${user.username}</li>`).join('')}
+  `;
+}
