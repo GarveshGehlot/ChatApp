@@ -2,7 +2,7 @@ const path = require('path'); //modules
 const http = require('http'); 
 const express = require('express');
 const formatMessage = require('./utils/messages');
-const socketio = require('socket.io');
+const socketio = require('socket.io');  //importing socket .io
 const  {   userJoin , getCurrentUser , userLeave ,getRoomUsers} = require('./utils/users');
 
 const app = express();
